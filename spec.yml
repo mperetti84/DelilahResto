@@ -1,0 +1,370 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Delilah_Resto
+  description: >-
+    API para pedidos a negocio de comidas, con loggin de usuarios y
+    administradores, gestion de pedidos, etc
+    
+paths:
+  /users:
+    get:
+      tags:
+        - Administrators
+      description: Retorna listado de usuarios
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                $ref: "#/components/schemas/user"
+
+  /users/{userId}:
+    get:
+      tags:
+          - Administrators
+          - Users
+      description: Retorna usuario con id indicado
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/user"
+    put:  
+      tags:
+          - Administrators 
+          - Users
+      description: put para editar usuario con todos los campos de usuario de cuenta (Admin), editar usuario con todos los campos de creacion de cuenta (User)
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: 
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/user"
+
+  /users/sign: 
+    post:
+      tags:
+          - Administrators
+          - Users
+      description: post con todos los campos de creacion, devuelve OK y respuesta de logged (ejecuta user), devuelve OK y respuesta de objeto User (Ejecuta admin)
+      responses:
+        200:
+          description: usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/responses/newUserOK"
+
+  /users/login: 
+    post:
+      tags:
+          - Users
+      description: post para loggeo de usuario existente, devuelve rta de loggeo (ejecuta User)
+      responses:
+        200:
+          description: usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/loggedUser"
+                
+
+  /orders: 
+    get:
+      tags:
+          - Administrators
+      description: get para ver todas las ordenes, en query state = all, o alguno de los estados del enum state (ejecuta Admin)
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: 
+          content:
+            application/json:
+
+  /orders/{orderId}:   
+    get:
+      tags:
+          - Administrators
+          - Users
+      description: get para ver el estado de un pedido en particular (ejecuta Admin),
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: 
+          content:
+            application/json:
+    put:
+      tags:
+          - Administrators
+          - Users
+      description: put para modificar el pedido en particular (ejecuta Admin), get para ver el estado de un pedido en particular (ejecuta User)
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: 
+          content:
+            application/json:
+
+  /orders/add: 
+    post:
+      tags:
+          - Users 
+      description: post para generar nuevo pedido, devuelve info del pedido (ejecuta User) 
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: 
+          content:
+            application/json:
+
+  /products: 
+    get:
+      tags:
+          - Administrators
+          - Users
+      description: get para ver listado de productos
+      responses:
+        200:
+          description: 
+          content:
+            application/json:
+
+  /products/add: 
+    post:
+      tags:
+          - Administrators
+      description: post para agregar producto (ejecuta Admin)
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: 
+          content:
+            application/json:
+
+  /products/{productId}: 
+    get:
+      tags:
+          - Administrators
+          - Users
+      description: get para ver producto en particular
+      responses:
+        200:
+          description: 
+          content:
+            application/json:
+    
+    put:
+      tags:
+          - Administrators
+      description: put para modificar producto en particular (ejecuta Admin)
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: 
+          content:
+            application/json:
+  
+components:
+  schemas:
+    user:
+      properties:
+        id:
+          type: string
+          description: id unico de usuario
+        userName:
+          type: string
+          description: nombre de fantasia de usuario
+        fullName:
+          type: string
+          description: nombre y apellido del usuario
+        email:
+          type: string
+          description: email de usuario
+        password:
+          type: string
+          description: passcowrd de acceso de usuario
+        address:
+          type: string
+          description: direccion de vivienda de usuario
+        phone:
+          type: string
+          description: telefono de usuario
+        favorites:
+          type: array
+          items:
+            type: string
+          description: listado de id de productos favoritos del usuario
+        paymentInfo:
+          type: string
+          description: id de informacion de pago del usuario
+        activeOrder:
+          type: string
+          description: id de orden en curso
+        pastOrders:
+          type: array
+          items:
+            type: string
+          description: listado de id de ordenes pasadas
+        created:
+          type: string
+          description: fecha de creacion
+        modified:
+          type: string
+          description: fecha de ultima edicion
+        admin:
+          type: boolean
+          description: detalla si user es admin o no
+        activeUser:
+          type: boolean
+          description: detalla si el usuario esta activo o dio de baja su cuenta
+          
+    product:
+      properties:
+        id:
+          type: string
+          description: id unico de producto
+        detail:
+          type: string
+          description: descripcion del producto
+        price:
+          type: number
+          description: precio del producto
+        photo:
+          type: string
+          description: foto del producto
+        title:
+          type: string
+          description: nombre del producto
+        created:
+          type: string
+          description: fecha de creacion
+        modified:
+          type: string
+          description: fecha de ultima edicion
+
+    order:
+      properties:
+        id:
+          type: string
+          description: id unico de orden
+        state:
+          type: string
+          enum: [nuevo, confirmado, preparando, enviando, cancelado, entregado]
+          description: estado de la orden
+        detail: 
+          type: array
+          items:
+            type: string
+          description: listado de los id productos en la orden
+        cost:
+          type: number
+          description: sumatoria de los precios de los productos
+        paymentType:
+          type: string
+          description: forma de pago de orden
+        user:
+          type: string
+          description: id de usuario
+        address:
+          type: string
+          description: direccion de entrega de la orden
+        created:
+          type: string
+          description: fecha de creacion
+          
+    paymentInfo:
+      properties:
+        id:
+          type: string
+          description: id unico de metodo de pago
+        cardType:
+          type: string
+          enum: [credito, debito]
+          description: debito/credito
+        cardNumber:
+          type: number
+          description: numero de tarjeta
+        cardCode:
+          type: number
+          description: codigo de tarjeta
+        cardExpDate:
+          type: number
+          description: fecha vencimiento de tarjeta
+    
+    loggedUser:
+      properties:
+        favorites:
+          type: array
+          items:
+            type: number
+          description: array de ids de productos favoritos del usuario
+        products:
+          type: array
+          items:
+            type: number
+          description: array de productos
+        
+    error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+
+  securitySchemes:
+    delilaAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    notFound:
+      description: el recurso no fue encontrado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+    unauthorized:
+      description: no se autorizo consulta
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+    newUserOK:
+      description: usuario creado con exito
+      content:
+        application/json:
+          schema:
+            type: string
+          
+  
+  
+ 
+

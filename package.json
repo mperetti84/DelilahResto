@@ -1,0 +1,28 @@
+{
+  "name": "manuelperetti-delilahresto",
+  "version": "1.0.0",
+  "description": "package de proyecto Delilah Resto",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mperetti84/DelilahResto.git"
+  },
+  "author": "Manuel Peretti",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mperetti84/DelilahResto/issues"
+  },
+  "homepage": "https://github.com/mperetti84/DelilahResto#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "moment": "^2.27.0",
+    "mysql2": "^2.1.0",
+    "nodemon": "^2.0.4",
+    "sequelize": "^6.3.5"
+  }
+}
