@@ -1,4 +1,4 @@
-const handlers = require("./data_handlers");
+const {jwt,privateKey} = require("./data_handlers");
 const queries = require("../db/queries");
 
 // When user tries to log in, check if combination user/pass/active is valid
@@ -50,22 +50,21 @@ const verifySign = async (req, res, next) => {
 // Check that user exists and has admin access. 
 const verifyAdmin = async (req, res, next) => {
     const token = req.headers.authorization.split(" ")[1];
+    
+    console.log("Admin token: " + token);
     try{
         const userData = jwt.verify(token, privateKey);
-        const isAdmin = await queries.selectQuery("users", ["admin"], ["user_id"], [userData.user_id]);
-        console.log("Rta verify admin middleware: " + isAdmin[0]);
-        if (isAdmin[0]){
-            if (isAdmin[0].admin === true){
-                next();
-            } else {
-                throw new Error("User does not have admin access");
-            }
-        } else{
-            throw new Error("User does not exist");
+        console.log("Rta verify admin middleware: " + userData.admin);
+        
+        if (userData.admin){
+            req.user_data = userData;
+            next();
+        } else {
+            throw new Error("User does not have admin access");
         }
     } catch(err) {
         console.log("Error verify admin middleware: " + err);
-        res.status(400).json(err.message);
+        res.status(400).json("User does not have admin access: " + err.message);
     }
 }
 

@@ -27,13 +27,13 @@ const insertQuery = async (table, fields, values) => {
     return query;
 }
 
-//update
+//update fields of table with values where conditions equal conditionvalues
 const updateQuery = async (table, fields, values, condition, conditionValue) => {
     let setString = "";
     // const whereString = "";
     if (fields.length === values.length && condition.length === conditionValue.length){
         for (let i = 0; i < fields.length; i++) {
-            setString = setString + `${fields[i]} = ${values[i]}, `;
+            setString = setString + `${fields[i]} = "${values[i]}", `;
         }
         // for (let i = 0; i < condition.length; i++) {
         //     whereString = whereString + `${condition[i]} = ${conditionValue}, `;
@@ -41,7 +41,7 @@ const updateQuery = async (table, fields, values, condition, conditionValue) => 
         setString   = setString.slice(0,-2);
         // whereString = whereString.slice(0,-2);
     } else {
-        return "";
+        throw new Error("Fields or condition number do not match");
     }
     const query = await mysql.query(`UPDATE ${table} SET ${setString} WHERE ${condition} = ${conditionValue}`);
     console.log("update query: " + query);
@@ -92,24 +92,54 @@ const selectQuery = async (table, fields, columns, values) => {
     return response;
 }
 
-//select from junction table
-const selectFavorites = async (table, fields, values) => {
-    let fieldsString = "";
-    fields.forEach(element => {
-        fieldsString = fieldsString + element;
-    });
-    let valuesString = "";
-    values.forEach(element => {
-        valuesString = valuesString + element;
-    });
-    const query = await mysql.query(`INSERT INTO ${table} (${fieldsString}) VALUES (${valuesString})`);
-    console.log("select from junction query: " + query);
-    return query;
+//select users's favorite products
+const selectFavorites = async (userId) => {
+    // select certain product columns according to user_id and product_id from Junction table "favorites_map"
+    let queryString = 
+    `SELECT products.product_id, products.title, products.detail, products.price, products.photo
+    FROM favorites_map
+    INNER JOIN products ON products.product_id = favorites_map.product_id
+    INNER JOIN users ON users.user_id = favorites_map.user_id
+    where users.user_id = ${userId}`;
+    console.log("Select favorites query string: " + queryString);
+
+    const response = await mysql.query(queryString);
+    console.log("Rta en .then de query select favorites: ");
+    console.log(response);
+
+    return response;
 }
 
-//select from junction table
+//select user's active orders from junction table "order_products_map"
 const selectActiveOrders = async (userId) => {
-    let queryString = `SELECT * FROM orders WHERE user_id = ${userId} AND state <> "cancelado" AND state <> "entregado"`;
+    let queryString = 
+    `SELECT o.order_id,p.title, p.price, op.quantity,o.address,o.total_cost,o.state
+    FROM orders o
+    INNER JOIN order_products_map op ON op.order_id = o.order_id
+    INNER JOIN products p ON p.product_id = op.product_id
+    where o.user_id = ${userId} and o.state <> "cancelado" and o.state <> "entregado"`;
+
+    console.log("Select active orders query string: " + queryString);
+
+    const response = await mysql.query(queryString);
+    console.log("Rta en .then de query select active orders: ");
+    console.log(response);
+
+    return response;
+}
+
+//select orders from junction table "order_products_map", if userId is null return all orders, else return only that user's orders
+const selectOrders = async (userId) => {
+    console.log("Entro en query select orders, user id: " + userId);
+    let queryString = 
+    `SELECT o.*,u.user_name,p.title, p.price, op.quantity
+    FROM orders o
+    INNER JOIN order_products_map op ON op.order_id = o.order_id
+    INNER JOIN products p ON p.product_id = op.product_id
+    INNER JOIN users u ON u.user_id = o.user_id`;
+    if(userId){
+        queryString = queryString + ` where o.user_id = ${userId}`;
+    }
     console.log("Select active orders query string: " + queryString);
 
     const response = await mysql.query(queryString);
@@ -135,4 +165,4 @@ const userExistQuery = async (userName, email) => {
 }
 
 
-module.exports = {insertQuery, updateQuery, deleteQuery, selectQuery, selectFavorites, selectActiveOrders, userExistQuery};
+module.exports = {insertQuery, updateQuery, deleteQuery, selectQuery, selectFavorites, selectActiveOrders, userExistQuery, selectOrders};
