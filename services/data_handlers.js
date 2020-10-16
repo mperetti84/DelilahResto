@@ -37,7 +37,7 @@ const loginHandler = async (userId) => {
     // get user admin status
     const isAdmin = await queries.selectQuery("users", ["admin"],["user_id"],[userId]);
     // generate object with logged user info and create token
-    const tokenInfo = {user_id: userId, admin: Boolean(isAdmin[0])};
+    const tokenInfo = {user_id: userId, admin: Boolean(isAdmin[0].admin)};
     console.log(tokenInfo);
     const token = jwt.sign(tokenInfo, privateKey);
     // build login data object
@@ -168,6 +168,49 @@ const updateOrderHandler = async (orderId, state) => {
     }
 }
 
+// manage place new order logic.
+const addOrderHandler = async (userId, detail, paymentId, secCode, address) => {
+    // comparar secCode con codigo de tabla de payment methods, si es ok seguir
+    console.log("Entro en add order handler");
+    // get security code of card
+    const tableSecCode = await queries.selectQuery("payment_data",["sec_code"],["payment_data_id"],[paymentId]);
+    console.log(detail);
+    if(tableSecCode[0].sec_code == secCode){
+        // obtener costos de productos de detail y calcular costo total de orden
+        let totalCost = 0;
+        let productCost;
+        console.log(detail.length);
+        for (const element of detail){
+            productCost = await queries.selectQuery("products",["price"],["product_id"],[element.productId]);
+            totalCost = totalCost + (productCost[0].price * element.quantity);
+            console.log("Precio producto: " + productCost[0].price + ", cantidad: " + element.quantity + ", precio total acumulado: " + totalCost);
+        }
+        // insertar orden en table orders, agregar estado nuevo, costo total y fecha de creacion
+        const actualTime = moment().format("YYYY-MM-DD HH:mm:ss");
+        const orderId = await queries.insertQuery("orders",["user_id","state","address","total_cost","created","payment_data_id"],[userId,"nuevo",address,totalCost,actualTime,paymentId]);
+        // insertar order id, product id y cantidad en tabla order_products_map
+        for (const element of detail){
+            let response = await queries.insertQuery("order_products_map",["order_id","product_id","quantity"],[orderId,element.productId,element.quantity]);
+        }
+        const placedOrder = await queries.selectOrders(userId,orderId); // ****** ORGANIZAR EN UN UNICO OBJETO, METER DETALLES EN UN ARRAY "DETAIL" COMO PIDEN LAS IMAGENES
+        return placedOrder;
+        // devolver detail, costo total y estado
+    } else{
+        throw new Error("Wrong security code");
+    }
+    
+}
+
+const addPaymentInfo = async (userId,cardType,cardNumber,secCode,expDate) => {
+    const paymentId = await queries.insertQuery("payment_data",["user_id","card_type","card_number","sec_code","exp_date"],[userId,cardType,cardNumber,secCode,expDate]);
+    if (paymentId){
+        const newPaymentInfo = await queries.selectQuery("payment_data",["card_type","exp_date"],["payment_data_id"],[paymentId]);
+        return newPaymentInfo[0];
+    } else{
+        throw new Error("Add new payment info error");
+    } 
+}
 
 
-module.exports = {signHandler, loginHandler, usersHandler, oneUserHandler, updateUserHandler, ordersHandler, activeOrdersHandler, updateOrderHandler, jwt, privateKey};
+
+module.exports = {signHandler, loginHandler, usersHandler, oneUserHandler, updateUserHandler, ordersHandler, activeOrdersHandler, updateOrderHandler, addOrderHandler, addPaymentInfo, jwt, privateKey};

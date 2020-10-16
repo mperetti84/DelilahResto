@@ -24,27 +24,61 @@ paths:
                 items:
                 $ref: "#/components/schemas/user"
 
-  /users/{userId}:
+  /users/check:
     get:
       tags:
-          - Administrators
-          - Users
-      description: Retorna usuario con id indicado
+        - Users
+      description: Retorna informacion del propio usuario
       security:
         - delilaAuth: []
       responses:
         200:
-          description: usuario
+          description: lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                $ref: "#/components/schemas/user"
+
+  /users/check/{userId}:
+    get:
+      tags:
+        - Administrators
+      description: Retorna informacion de cualquier usuario
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                $ref: "#/components/schemas/user"
+
+  /users/modify/{userId}:
+    put:  
+      tags:
+          - Administrators 
+      description: editar usuario con todos los campos de usuario de cuenta (Admin), editar usuario con todos los campos de creacion de cuenta (User)
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: 
           content:
             application/json:
               schema:
                 type: object
                 $ref: "#/components/schemas/user"
+
+  /users/modify:
     put:  
       tags:
-          - Administrators 
           - Users
-      description: put para editar usuario con todos los campos de usuario de cuenta (Admin), editar usuario con todos los campos de creacion de cuenta (User)
+      description: editar usuario propio (User)
       security:
         - delilaAuth: []
       responses:
@@ -84,8 +118,21 @@ paths:
               schema:
                 type: object
                 $ref: "#/components/schemas/loggedUser"
-                
 
+  /users/addPaymentMethod: 
+    post:
+      tags:
+          - Users
+      description: post para agregar nueva tarjeta de credito/debito
+      responses:
+        200:
+          description: usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/"
+                
   /orders: 
     get:
       tags:
@@ -99,24 +146,10 @@ paths:
           content:
             application/json:
 
-  /orders/{orderId}:   
-    get:
+    post:
       tags:
-          - Administrators
-          - Users
-      description: get para ver el estado de un pedido en particular (ejecuta Admin),
-      security:
-        - delilaAuth: []
-      responses:
-        200:
-          description: 
-          content:
-            application/json:
-    put:
-      tags:
-          - Administrators
-          - Users
-      description: put para modificar el pedido en particular (ejecuta Admin), get para ver el estado de un pedido en particular (ejecuta User)
+          - Users 
+      description: post para generar nuevo pedido, devuelve info del pedido (ejecuta User) 
       security:
         - delilaAuth: []
       responses:
@@ -125,11 +158,37 @@ paths:
           content:
             application/json:
 
-  /orders/add: 
-    post:
+  /orders/check/{orderId}:   
+    get:
       tags:
-          - Users 
-      description: post para generar nuevo pedido, devuelve info del pedido (ejecuta User) 
+          - Administrators
+      description: get para ver el estado de un pedido en particular (ejecuta Admin),
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: 
+          content:
+            application/json:
+
+  /orders/check:   
+    get:
+      tags:
+          - Users
+      description: get para ver el estado de las ordenes activas del propio usuario,
+      security:
+        - delilaAuth: []
+      responses:
+        200:
+          description: 
+          content:
+            application/json:
+  
+  /orders/{orderId}:
+    put:
+      tags:
+          - Administrators
+      description: put para modificar el pedido en particular (ejecuta Admin)
       security:
         - delilaAuth: []
       responses:
@@ -277,14 +336,14 @@ components:
         detail: 
           type: array
           items:
-            type: string
-          description: listado de los id productos en la orden
+            type: object
+          description: listado de objetos de los id + cantidad de productos en la orden
         cost:
           type: number
           description: sumatoria de los precios de los productos
         paymentType:
-          type: string
-          description: forma de pago de orden
+          type: number
+          description: id de forma de pago de orden
         user:
           type: string
           description: id de usuario

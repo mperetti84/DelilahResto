@@ -113,11 +113,11 @@ const selectFavorites = async (userId) => {
 //select user's active orders from junction table "order_products_map"
 const selectActiveOrders = async (userId) => {
     let queryString = 
-    `SELECT o.order_id,p.title, p.price, op.quantity,o.address,o.total_cost,o.state
-    FROM orders o
-    INNER JOIN order_products_map op ON op.order_id = o.order_id
-    INNER JOIN products p ON p.product_id = op.product_id
-    where o.user_id = ${userId} and o.state <> "cancelado" and o.state <> "entregado"`;
+        `SELECT o.order_id,p.title, p.price, op.quantity,o.address,o.total_cost,o.state
+        FROM orders o
+        INNER JOIN order_products_map op ON op.order_id = o.order_id
+        INNER JOIN products p ON p.product_id = op.product_id
+        where o.user_id = ${userId} and o.state <> "cancelado" and o.state <> "entregado"`;
 
     console.log("Select active orders query string: " + queryString);
 
@@ -128,17 +128,24 @@ const selectActiveOrders = async (userId) => {
     return response;
 }
 
-//select orders from junction table "order_products_map", if userId is null return all orders, else return only that user's orders
-const selectOrders = async (userId) => {
+// select orders from junction table "order_products_map", 
+// if userId is null return all orders, else return only that user's orders
+// if orderId is null return all orders, else return only that specific order
+const selectOrders = async (userId,orderId) => {
     console.log("Entro en query select orders, user id: " + userId);
     let queryString = 
-    `SELECT o.*,u.user_name,p.title, p.price, op.quantity
-    FROM orders o
-    INNER JOIN order_products_map op ON op.order_id = o.order_id
-    INNER JOIN products p ON p.product_id = op.product_id
-    INNER JOIN users u ON u.user_id = o.user_id`;
+        `SELECT o.*,u.user_name,p.title, p.price, op.quantity, pd.card_type 
+        FROM orders o
+        INNER JOIN order_products_map op ON op.order_id = o.order_id
+        INNER JOIN products p ON p.product_id = op.product_id
+        INNER JOIN payment_data pd ON pd.payment_data_id = o.payment_data_id
+        INNER JOIN users u ON u.user_id = o.user_id`;
     if(userId){
         queryString = queryString + ` where o.user_id = ${userId}`;
+    }
+    // get specific order works only if userId is defined
+    if(orderId && userId){
+        queryString = queryString + ` AND o.order_id = ${orderId}`;
     }
     console.log("Select active orders query string: " + queryString);
 

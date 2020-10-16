@@ -18,12 +18,14 @@ CREATE TABLE orders
 (
     order_id int AUTO_INCREMENT NOT NULL,
     user_id int NOT NULL,
+    payment_data_id int NOT NULL,
     state enum('nuevo', 'confirmado', 'preparando', 'enviando', 'cancelado', 'entregado') NOT NULL,
     address varchar(50) NOT NULL,
     created datetime NOT NULL,
     total_cost int NOT NULL,
     PRIMARY KEY (order_id),
     FOREIGN KEY (user_id) REFERENCES users (user_id)
+    FOREIGN KEY (payment_data_id) REFERENCES payment_data (payment_data_id)
 );
 
 CREATE TABLE products
