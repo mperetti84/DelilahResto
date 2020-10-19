@@ -4,7 +4,7 @@ info:
   title: Delilah_Resto
   description: >-
     API para pedidos a negocio de comidas, con loggin de usuarios y
-    administradores, gestion de pedidos, etc
+    administradores, gestion de pedidos y gestion de productos. Tercer trabajo practico de la carrera DWFS de Acamica.
     
 paths:
   /users:
@@ -22,7 +22,13 @@ paths:
               schema:
                 type: array
                 items:
-                $ref: "#/components/schemas/user"
+                $ref: "#/components/schemas/fullUser"
+        400:
+          description: error obteniendo lista de usuarios
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /users/check:
     get:
@@ -37,42 +43,79 @@ paths:
           content:
             application/json:
               schema:
-                type: array
+                type: object
                 items:
                 $ref: "#/components/schemas/user"
+        400:
+          description: error obteniendo informacion de usuario
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /users/check/{userId}:
     get:
       tags:
         - Administrators
-      description: Retorna informacion de cualquier usuario
+      description: Retorna informacion de un usuario en particular
       security:
         - delilaAuth: []
+      parameters:
+          - in: path
+            name: userId
+            schema:
+              type: integer
+            required: true
       responses:
         200:
-          description: lista de usuarios
+          description: informacion de usuario
           content:
             application/json:
               schema:
-                type: array
+                type: object
                 items:
                 $ref: "#/components/schemas/user"
+        400:
+          description: error obteniendo informacion de usuario
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /users/modify/{userId}:
     put:  
       tags:
           - Administrators 
-      description: editar usuario con todos los campos de usuario de cuenta (Admin), editar usuario con todos los campos de creacion de cuenta (User)
+      description: editar usuario (Admin)
       security:
         - delilaAuth: []
+      parameters:
+          - in: path
+            name: userId
+            schema:
+              type: integer
+            required: true
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/bodyUser"
       responses:
         200:
-          description: 
+          description: informacion de usuario actualizada
           content:
             application/json:
               schema:
                 type: object
                 $ref: "#/components/schemas/user"
+        400:
+          description: error editando informacion de usuario
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /users/modify:
     put:  
@@ -81,49 +124,117 @@ paths:
       description: editar usuario propio (User)
       security:
         - delilaAuth: []
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/bodyUser"
       responses:
         200:
-          description: 
+          description: informacion de usuario actualizada
           content:
             application/json:
               schema:
                 type: object
                 $ref: "#/components/schemas/user"
+        400:
+          description: error editando informacion de usuario
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /users/sign: 
     post:
       tags:
           - Administrators
           - Users
-      description: post con todos los campos de creacion, devuelve OK y respuesta de logged (ejecuta user), devuelve OK y respuesta de objeto User (Ejecuta admin)
+      description: crear nuevo usuario
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/bodyUser"
       responses:
         200:
-          description: usuario
+          description: usuario insertado correctamente en tabla users
           content:
             application/json:
               schema:
                 type: object
-                $ref: "#/responses/newUserOK"
+                properties:
+                    products: 
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/product"
+                    token:
+                      type: string 
+        400:
+          description: error registrando usuario
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /users/login: 
     post:
       tags:
           - Users
-      description: post para loggeo de usuario existente, devuelve rta de loggeo (ejecuta User)
+      description: loggeo de usuario existente
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userName:
+                    type: string
+                  pass:
+                    type: string
       responses:
         200:
-          description: usuario
+          description: usuario loggeado con exito
           content:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/loggedUser"
+                properties:
+                    products: 
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/product"
+                    favorites:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/product"
+                    token:
+                      type: string
+        400:
+          description: error loggeando usuario
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /users/addPaymentMethod: 
     post:
       tags:
           - Users
       description: post para agregar nueva tarjeta de credito/debito
+      security:
+        - delilaAuth: []
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/bodyPaymentInfo"
       responses:
         200:
           description: usuario
@@ -131,131 +242,278 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/"
-                
+                properties:
+                  card_type:
+                    type: string
+                  exp_date:
+                    type: string
+        400:
+          description: error agregando forma de pago
+          content:
+            application/json:
+              schema: 
+                type: string
   /orders: 
     get:
       tags:
           - Administrators
-      description: get para ver todas las ordenes, en query state = all, o alguno de los estados del enum state (ejecuta Admin)
+      description: ver todas las ordenes existentes
       security:
         - delilaAuth: []
       responses:
         200:
-          description: 
+          description: listado de todas las ordenes de todos los usuarios
           content:
             application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/fullOrder"
+        400:
+          description: error obteniendo listado de ordenes
+          content:
+            application/json:
+              schema: 
+                type: string
 
     post:
       tags:
           - Users 
-      description: post para generar nuevo pedido, devuelve info del pedido (ejecuta User) 
+      description: post para generar nuevo pedido 
       security:
         - delilaAuth: []
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/bodyOrder"
       responses:
         200:
-          description: 
+          description: se devuelve orden ingresada con exito
           content:
             application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/order"
+        400:
+          description: error insertando orden
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /orders/check/{orderId}:   
     get:
       tags:
           - Administrators
-      description: get para ver el estado de un pedido en particular (ejecuta Admin),
+      description: ver el estado de un pedido en particular (ejecuta Admin),
       security:
         - delilaAuth: []
+      parameters:
+        - in: path
+          name: orderId
+          schema:
+            type: integer
+          required: true
       responses:
         200:
-          description: 
+          description: orden a verificar
           content:
             application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/order"
+        400:
+          description: error revisando orden
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /orders/check:   
     get:
       tags:
           - Users
-      description: get para ver el estado de las ordenes activas del propio usuario,
+      description: ver el estado de las ordenes activas del propio usuario,
       security:
         - delilaAuth: []
       responses:
         200:
-          description: 
+          description: orden a verificar
           content:
             application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/order"
+        400:
+          description: error revisando orden
+          content:
+            application/json:
+              schema: 
+                type: string
   
   /orders/{orderId}:
     put:
       tags:
           - Administrators
-      description: put para modificar el pedido en particular (ejecuta Admin)
+      description: modificar el estado de un pedido en particular
       security:
         - delilaAuth: []
+      parameters:
+        - in: path
+          name: orderId
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                    state:
+                      type: string
+                      enum: [nuevo, confirmado, preparando, enviando, cancelado, entregado]
+                      description: estado de la orden
       responses:
         200:
-          description: 
+          description: orden actualizada
           content:
             application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/order"
+        400:
+          description: error actualizando orden
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /products: 
     get:
       tags:
           - Administrators
           - Users
-      description: get para ver listado de productos
+      description: ver listado de productos
       responses:
         200:
-          description: 
+          description: listado de productos disponibles
           content:
             application/json:
-
-  /products/add: 
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/product"
+        400:
+          description: error listando productos
+          content:
+            application/json:
+              schema: 
+                type: string
+    
     post:
       tags:
           - Administrators
-      description: post para agregar producto (ejecuta Admin)
+      description: agregar nuevo producto
       security:
         - delilaAuth: []
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/bodyProduct"
       responses:
         200:
-          description: 
+          description: nuevo producto agregado
           content:
             application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/product"
+        400:
+          description: error insertando producto
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /products/{productId}: 
     get:
       tags:
           - Administrators
           - Users
-      description: get para ver producto en particular
+      description: ver producto en particular
+      parameters:
+        - in: path
+          name: productId
+          schema:
+            type: integer
+          required: true
       responses:
         200:
-          description: 
+          description: producto a revisar
           content:
             application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/product"
+        400:
+          description: error revisando producto
+          content:
+            application/json:
+              schema: 
+                type: string
     
     put:
       tags:
           - Administrators
-      description: put para modificar producto en particular (ejecuta Admin)
+      description: modificar producto en particular
       security:
         - delilaAuth: []
+      parameters:
+        - in: path
+          name: productId
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/product"
       responses:
         200:
-          description: 
+          description: producto actualizado
           content:
             application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/product"
+        400:
+          description: error actualizando producto
+          content:
+            application/json:
+              schema: 
+                type: string
   
 components:
   schemas:
-    user:
+    fullUser:
       properties:
-        id:
+        userId:
           type: string
           description: id unico de usuario
         userName:
           type: string
-          description: nombre de fantasia de usuario
+          description: nombre de usuario
         fullName:
           type: string
           description: nombre y apellido del usuario
@@ -271,22 +529,6 @@ components:
         phone:
           type: string
           description: telefono de usuario
-        favorites:
-          type: array
-          items:
-            type: string
-          description: listado de id de productos favoritos del usuario
-        paymentInfo:
-          type: string
-          description: id de informacion de pago del usuario
-        activeOrder:
-          type: string
-          description: id de orden en curso
-        pastOrders:
-          type: array
-          items:
-            type: string
-          description: listado de id de ordenes pasadas
         created:
           type: string
           description: fecha de creacion
@@ -296,13 +538,58 @@ components:
         admin:
           type: boolean
           description: detalla si user es admin o no
-        activeUser:
+        activer:
           type: boolean
           description: detalla si el usuario esta activo o dio de baja su cuenta
+    
+    user:
+      properties:
+        id:
+          type: string
+          description: id unico de usuario
+        userName:
+          type: string
+          description: nombre de usuario
+        fullName:
+          type: string
+          description: nombre y apellido del usuario
+        email:
+          type: string
+          description: email de usuario
+        password:
+          type: string
+          description: passcowrd de acceso de usuario
+        address:
+          type: string
+          description: direccion de vivienda de usuario
+        phone:
+          type: string
+          description: telefono de usuario
+    
+    bodyUser:
+      properties:
+        userName:
+          type: string
+          description: nombre de usuario
+        fullName:
+          type: string
+          description: nombre y apellido del usuario
+        email:
+          type: string
+          description: email de usuario
+        password:
+          type: string
+          description: passcowrd de acceso de usuario
+        address:
+          type: string
+          description: direccion de vivienda de usuario
+        phone:
+          type: string
+          description: telefono de usuario
           
     product:
       properties:
-        id:
+        productId:
           type: string
           description: id unico de producto
         detail:
@@ -317,16 +604,25 @@ components:
         title:
           type: string
           description: nombre del producto
-        created:
+          
+    bodyProduct:
+      properties:
+        detail:
           type: string
-          description: fecha de creacion
-        modified:
+          description: descripcion del producto
+        price:
+          type: number
+          description: precio del producto
+        photo:
           type: string
-          description: fecha de ultima edicion
+          description: foto del producto
+        title:
+          type: string
+          description: nombre del producto
 
     order:
       properties:
-        id:
+        orderId:
           type: string
           description: id unico de orden
         state:
@@ -334,31 +630,108 @@ components:
           enum: [nuevo, confirmado, preparando, enviando, cancelado, entregado]
           description: estado de la orden
         detail: 
-          type: array
+          type: array 
           items:
             type: object
-          description: listado de objetos de los id + cantidad de productos en la orden
-        cost:
+            properties:
+                title:
+                  description: titulo del producto
+                  type: string
+                photo:
+                  description: url de foto del producto
+                  type: string
+                price:
+                  description: precio del producto
+                  type: integer
+                quantity:
+                  description: cantidad de productos
+                  type: integer
+          description: listado de objetos de la orden
+        totalCost:
           type: number
           description: sumatoria de los precios de los productos
         paymentType:
           type: number
-          description: id de forma de pago de orden
-        user:
-          type: string
-          description: id de usuario
+          description: forma de pago de orden
         address:
           type: string
           description: direccion de entrega de la orden
-        created:
-          type: string
-          description: fecha de creacion
-          
-    paymentInfo:
+
+    fullOrder:
       properties:
-        id:
+        orderId:
           type: string
-          description: id unico de metodo de pago
+          description: id unico de orden
+        state:
+          type: string
+          enum: [nuevo, confirmado, preparando, enviando, cancelado, entregado]
+          description: estado de la orden
+        detail: 
+          type: array 
+          items:
+            type: object
+            properties:
+                title:
+                  description: titulo del producto
+                  type: string
+                photo:
+                  description: url de foto del producto
+                  type: string
+                price:
+                  description: precio del producto
+                  type: integer
+                quantity:
+                  description: cantidad de productos
+                  type: integer
+          description: listado de objetos de la orden
+        totalCost:
+          type: number
+          description: sumatoria de los precios de los productos
+        paymentType:
+          type: number
+          description: forma de pago de orden
+        address:
+          type: string
+          description: direccion de entrega de la orden
+        fullName:
+          type: string
+          description: nombre completo del usuario
+        userName:
+          type: string
+          description: nombre de usuario
+        email:
+          type: string
+          description: email del usuario
+        phone:
+          type: string
+          description: telefono del usuario
+      
+    bodyOrder:
+      properties:
+        detail: 
+            type: array 
+            items:
+              type: object
+              properties:
+                  productId:
+                    description: id del producto
+                    type: integer
+                  quantity:
+                    description: cantidad de productos
+                    type: integer
+            description: listado de objetos de la orden
+        paymentId:
+          type: number
+          description: id de forma de pago
+        secCode:
+          type: number
+          description: codigo de tarjeta
+        address:
+          type: string
+          description: direccion de entrega de la orden
+          
+    bodyPaymentInfo:
+      properties:
         cardType:
           type: string
           enum: [credito, debito]
@@ -366,64 +739,15 @@ components:
         cardNumber:
           type: number
           description: numero de tarjeta
-        cardCode:
+        secCode:
           type: number
           description: codigo de tarjeta
-        cardExpDate:
+        expDate:
           type: number
           description: fecha vencimiento de tarjeta
-    
-    loggedUser:
-      properties:
-        favorites:
-          type: array
-          items:
-            type: number
-          description: array de ids de productos favoritos del usuario
-        products:
-          type: array
-          items:
-            type: number
-          description: array de productos
-        
-    error:
-      type: object
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-      required:
-        - code
-        - message
 
   securitySchemes:
     delilaAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
-  responses:
-    notFound:
-      description: el recurso no fue encontrado
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/error"
-    unauthorized:
-      description: no se autorizo consulta
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/error"
-    newUserOK:
-      description: usuario creado con exito
-      content:
-        application/json:
-          schema:
-            type: string
-          
-  
-  
- 
-
