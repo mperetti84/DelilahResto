@@ -47,7 +47,7 @@ const verifySign = async (req, res, next) => {
     }
 }
 
-// Check that user exists and has admin access. 
+// Check that user is logged and has admin access. 
 const verifyAdmin = async (req, res, next) => {
     const token = req.headers.authorization.split(" ")[1];
     
@@ -55,7 +55,6 @@ const verifyAdmin = async (req, res, next) => {
     try{
         const userData = jwt.verify(token, privateKey);
         console.log("Rta verify admin middleware: " + userData.admin);
-        
         if (userData.admin){
             req.user_data = userData;
             next();
@@ -64,7 +63,12 @@ const verifyAdmin = async (req, res, next) => {
         }
     } catch(err) {
         console.log("Error verify admin middleware: " + err);
-        res.status(400).json("User does not have admin access: " + err.message);
+        // identify if enters catch due to expired token
+        if(err.message.search("expired")){
+            res.status(400).json("Session expired, please log in again.");
+        } else{
+            res.status(400).json("User does not have admin access: " + err.message);
+        }
     }
 }
 
@@ -76,9 +80,19 @@ const verifyLogged = (req, res, next) => {
         req.user_id = userData.user_id;
         next();
     } catch(err) {
-        console.log(err);
-        res.status(400).json("You must log in to access this endpoint");
+        console.log(err.message);
+        // identify if enters catch due to expired token
+        if(err.message.search("expired")){
+            res.status(400).json("Session expired, please log in again.");
+        } else{
+            res.status(400).json("You must log in to access this endpoint");
+        }
     }
 }
 
-module.exports = {verifyLogin, verifySign, verifyAdmin, verifyLogged};
+module.exports = {
+    verifyLogin, 
+    verifySign, 
+    verifyAdmin, 
+    verifyLogged
+};

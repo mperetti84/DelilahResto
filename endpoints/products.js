@@ -1,23 +1,94 @@
 const express = require('express');
-const middlewares = require("./services/middlewares");
-const handlers = require("./services/data_handlers");
+const middlewares = require("../services/middlewares");
+const handlers = require("../services/data_handlers");
 
 const router = express.Router();
 
-app.get("/products", (req,res) => {
-
+// get products list
+router.get("/", async (req,res) => {
+    try{
+        let response = await handlers.productsHandler();
+        if(response){
+            console.log("Entro en ruta products, lista products: ");
+            console.log(response);
+            res.status(200).json(response);
+        } else{
+            throw new Error(response);
+        } 
+    } catch(err){
+            res.status(400).json("Get products error: " + err.message);
+    }
 });
 
-app.post("/products/add", (req,res) => {
-
+// get one product information
+router.get("/:id", async (req,res) => {
+    try{
+        let productId = req.params.id;
+        let response = await handlers.productsHandler(productId);
+        if(response){
+            console.log("Entro en ruta product: ");
+            console.log(response);
+            res.status(200).json(response);
+        } else{
+            throw new Error(response);
+        } 
+    } catch(err){
+            res.status(400).json("Get product info error: " + err.message);
+    }
 });
 
-app.get("/products/id", (req,res) => {
+// from this point on verify that an Admin is calling this endpoint
+router.use(middlewares.verifyAdmin);
 
+// create new product
+router.post("/", async (req,res) => {
+    try{
+        let {title, detail, price, photo} = req.body;
+        let response = await handlers.addProductHandler(title, detail, price, photo);
+        if(response){
+            console.log("Entro en ruta add product: ");
+            console.log(response);
+            res.status(200).json(response);
+        } else{
+            throw new Error(response);
+        } 
+    } catch(err){
+            res.status(400).json("Add new product error: " + err.message);
+    }
 });
 
-app.put("/products/id", (req,res) => {
+// modify certain product information
+router.put("/:id", async (req,res) => {
+    try{
+        let {title, detail, price, photo} = req.body;
+        let productId = req.params.id;
+        let response = await handlers.updateProductHandler(title, detail, price, photo, productId);
+        if(response){
+            console.log("Entro en ruta update product: ");
+            console.log(response);
+            res.status(200).json(response);
+        } else{
+            throw new Error(response);
+        } 
+    } catch(err){
+            res.status(400).json("Update product information error: " + err.message);
+    }
+});
 
+// delete product endpoint: does not delete from table, only changes active field to "false"
+router.put("/delete/:id", async (req,res) => {
+    try{
+        let productId = req.params.id;
+        console.log("Entro en ruta delete product");
+        let response = await handlers.deleteProductHandler(productId);
+        if(response){
+            res.status(200).json(response);
+        } else{
+            throw new Error(response);
+        }
+    } catch(err){
+            res.status(500).json("Delete product error: " + err.message);
+    }
 });
 
 module.exports = router;

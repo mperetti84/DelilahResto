@@ -1,6 +1,6 @@
 const express = require('express');
-const middlewares = require("./services/middlewares");
-const handlers = require("./services/data_handlers");
+const middlewares = require("../services/middlewares");
+const handlers = require("../services/data_handlers");
 
 const router = express.Router();
 
@@ -131,7 +131,23 @@ router.post("/addPaymentMethod", middlewares.verifyLogged, async (req,res) => {
         res.status(200).json(response);
     } catch(err){
         console.log("Add payment info error: " + err);
-        res.status(400).json("Add payment info error: " + err.message)
+        res.status(400).json("Add payment info error: " + err.message);
+    }
+});
+
+// delete user endpoint: does not delete from table, only changes active field to "false"
+router.put("/delete/:id", middlewares.verifyAdmin, async (req,res) => {
+    try{
+        let userId = req.params.id;
+        console.log("Entro en ruta delete");
+        let response = await handlers.deleteUserHandler(userId);
+        if(response){
+            res.status(200).json(response);
+        } else{
+            throw new Error(response);
+        }
+    } catch(err){
+            res.status(500).json("Delete user error: " + err.message);
     }
 });
 

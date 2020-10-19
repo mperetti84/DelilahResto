@@ -17,6 +17,7 @@ const insertQuery = async (table, fields, values) => {
                 valuesString = valuesString + `"${element}",`;
             }
         });
+        // remove "," at the end of strings
         fieldsString = fieldsString.slice(0,-1);
         valuesString = valuesString.slice(0,-1);
     } else {
@@ -35,11 +36,8 @@ const updateQuery = async (table, fields, values, condition, conditionValue) => 
         for (let i = 0; i < fields.length; i++) {
             setString = setString + `${fields[i]} = "${values[i]}", `;
         }
-        // for (let i = 0; i < condition.length; i++) {
-        //     whereString = whereString + `${condition[i]} = ${conditionValue}, `;
-        // }
+        // remove ", " at the end of string
         setString   = setString.slice(0,-2);
-        // whereString = whereString.slice(0,-2);
     } else {
         throw new Error("Fields or condition number do not match");
     }
@@ -80,6 +78,7 @@ const selectQuery = async (table, fields, columns, values) => {
                 whereString = whereString + `${columns[i]} = "${values[i]}" AND `;
             }        
         }
+        // remove " AND " at the end of string
         whereString = whereString.slice(0,-5);
     } 
     let queryString = `SELECT ${fieldsString} FROM ${table} ${whereString}`;
@@ -96,11 +95,11 @@ const selectQuery = async (table, fields, columns, values) => {
 const selectFavorites = async (userId) => {
     // select certain product columns according to user_id and product_id from Junction table "favorites_map"
     let queryString = 
-    `SELECT products.product_id, products.title, products.detail, products.price, products.photo
-    FROM favorites_map
-    INNER JOIN products ON products.product_id = favorites_map.product_id
-    INNER JOIN users ON users.user_id = favorites_map.user_id
-    where users.user_id = ${userId}`;
+        `SELECT products.product_id, products.title, products.detail, products.price, products.photo
+        FROM favorites_map
+        INNER JOIN products ON products.product_id = favorites_map.product_id
+        INNER JOIN users ON users.user_id = favorites_map.user_id
+        WHERE users.user_id = ${userId}`;
     console.log("Select favorites query string: " + queryString);
 
     const response = await mysql.query(queryString);
@@ -113,11 +112,15 @@ const selectFavorites = async (userId) => {
 //select user's active orders from junction table "order_products_map"
 const selectActiveOrders = async (userId) => {
     let queryString = 
-        `SELECT o.order_id,p.title, p.price, op.quantity,o.address,o.total_cost,o.state
+        `SELECT o.order_id, p.photo, p.title, p.price, op.quantity, o.total_cost, o.state, 
+        pd.card_type, o.address, u.full_name, u.user_name, u.email, u.phone
         FROM orders o
         INNER JOIN order_products_map op ON op.order_id = o.order_id
         INNER JOIN products p ON p.product_id = op.product_id
-        where o.user_id = ${userId} and o.state <> "cancelado" and o.state <> "entregado"`;
+        INNER JOIN payment_data pd ON pd.payment_data_id = o.payment_data_id
+        INNER JOIN users u ON u.user_id = o.user_id  
+        WHERE o.user_id = ${userId} and o.state <> "cancelado" and o.state <> "entregado" 
+        ORDER BY o.order_id ASC`;
 
     console.log("Select active orders query string: " + queryString);
 
@@ -134,19 +137,22 @@ const selectActiveOrders = async (userId) => {
 const selectOrders = async (userId,orderId) => {
     console.log("Entro en query select orders, user id: " + userId);
     let queryString = 
-        `SELECT o.*,u.user_name,p.title, p.price, op.quantity, pd.card_type 
+        `SELECT o.order_id, p.photo, p.title, p.price, op.quantity, o.total_cost, o.state, 
+        pd.card_type, o.address, u.full_name, u.user_name, u.email, u.phone
         FROM orders o
         INNER JOIN order_products_map op ON op.order_id = o.order_id
         INNER JOIN products p ON p.product_id = op.product_id
         INNER JOIN payment_data pd ON pd.payment_data_id = o.payment_data_id
         INNER JOIN users u ON u.user_id = o.user_id`;
     if(userId){
-        queryString = queryString + ` where o.user_id = ${userId}`;
+        queryString = queryString + ` WHERE o.user_id = ${userId}`;
     }
     // get specific order works only if userId is defined
     if(orderId && userId){
         queryString = queryString + ` AND o.order_id = ${orderId}`;
     }
+    queryString = queryString + ` ORDER BY o.order_id ASC`;
+
     console.log("Select active orders query string: " + queryString);
 
     const response = await mysql.query(queryString);
@@ -172,4 +178,13 @@ const userExistQuery = async (userName, email) => {
 }
 
 
-module.exports = {insertQuery, updateQuery, deleteQuery, selectQuery, selectFavorites, selectActiveOrders, userExistQuery, selectOrders};
+module.exports = {
+    insertQuery, 
+    updateQuery, 
+    deleteQuery, 
+    selectQuery, 
+    selectFavorites, 
+    selectActiveOrders, 
+    userExistQuery, 
+    selectOrders
+};

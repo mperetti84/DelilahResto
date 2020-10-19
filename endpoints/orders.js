@@ -1,6 +1,6 @@
 const express = require('express');
-const middlewares = require("./services/middlewares");
-const handlers = require("./services/data_handlers");
+const middlewares = require("../services/middlewares");
+const handlers = require("../services/data_handlers");
 
 const router = express.Router();
 
@@ -73,6 +73,7 @@ router.put("/:orderId", middlewares.verifyAdmin, async (req,res) => {
     }
 });
 
+// place new order
 router.post("/", middlewares.verifyLogged ,async (req,res) => {
     try{
         // detail: array of [{productId,quantity}]; secCode: 3 digits of security code
@@ -87,7 +88,7 @@ router.post("/", middlewares.verifyLogged ,async (req,res) => {
             throw new Error(response);
         }
     } catch(err){
-            res.status(500).json("Sign in error: " + err.message);
+            res.status(500).json("Place order error: " + err.message);
     }
 });
 

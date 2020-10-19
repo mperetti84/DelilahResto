@@ -30,6 +30,13 @@ db.init()
 
 app.use(bodyParser.json());
 
+app.use(function(err, req, res, next) {
+    // function to catch errors from body-parser due to wrong JSON syntax in request body 
+    if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+        res.status(400).send({ code: 400, message: "Bad request. Check JSON syntax" });
+    } else next();
+});
+
 // use "Users" endpoints
 app.use("/users", users);
 
