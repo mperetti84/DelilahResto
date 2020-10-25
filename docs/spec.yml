@@ -3,8 +3,8 @@ info:
   version: 1.0.0
   title: Delilah_Resto
   description: >-
-    API para pedidos a negocio de comidas, con loggin de usuarios y
-    administradores, gestion de pedidos y gestion de productos. Tercer trabajo practico de la carrera DWFS de Acamica.
+    API de negocio de comidas, con loggin de usuarios y administradores, gestion de pedidos y gestion de productos. 
+    Tercer trabajo practico de la carrera DWFS de Acamica.
     
 paths:
   /users:
@@ -22,7 +22,8 @@ paths:
               schema:
                 type: array
                 items:
-                $ref: "#/components/schemas/fullUser"
+                  allOf:
+                    - $ref: "#/components/schemas/fullUser"
         400:
           description: error obteniendo lista de usuarios
           content:
@@ -45,7 +46,8 @@ paths:
               schema:
                 type: object
                 items:
-                $ref: "#/components/schemas/user"
+                  allOf:
+                    - $ref: "#/components/schemas/user"
         400:
           description: error obteniendo informacion de usuario
           content:
@@ -74,7 +76,8 @@ paths:
               schema:
                 type: object
                 items:
-                $ref: "#/components/schemas/user"
+                  allOf:
+                    - $ref: "#/components/schemas/user"
         400:
           description: error obteniendo informacion de usuario
           content:
@@ -101,7 +104,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/bodyUser"
+                allOf:
+                    - $ref: "#/components/schemas/bodyUser"
       responses:
         200:
           description: informacion de usuario actualizada
@@ -109,7 +113,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/user"
+                allOf:
+                  - $ref: "#/components/schemas/user"
         400:
           description: error editando informacion de usuario
           content:
@@ -130,7 +135,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/bodyUser"
+                allOf:
+                  - $ref: "#/components/schemas/bodyUser"
       responses:
         200:
           description: informacion de usuario actualizada
@@ -138,7 +144,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/user"
+                allOf:
+                  - $ref: "#/components/schemas/user"
         400:
           description: error editando informacion de usuario
           content:
@@ -158,7 +165,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/bodyUser"
+                allOf:
+                  - $ref: "#/components/schemas/bodyUser"
       responses:
         200:
           description: usuario insertado correctamente en tabla users
@@ -170,7 +178,8 @@ paths:
                     products: 
                       type: array
                       items:
-                        $ref: "#/components/schemas/product"
+                          allOf:
+                            -       $ref: "#/components/schemas/product"
                     token:
                       type: string 
         400:
@@ -183,6 +192,7 @@ paths:
   /users/login: 
     post:
       tags:
+          - Administrators
           - Users
       description: loggeo de usuario existente
       requestBody:
@@ -207,11 +217,13 @@ paths:
                     products: 
                       type: array
                       items:
-                        $ref: "#/components/schemas/product"
+                          allOf:
+                            -       $ref: "#/components/schemas/product"
                     favorites:
                       type: array
                       items:
-                        $ref: "#/components/schemas/product"
+                          allOf:
+                            -       $ref: "#/components/schemas/product"
                     token:
                       type: string
         400:
@@ -234,7 +246,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/bodyPaymentInfo"
+                allOf:
+                  - $ref: "#/components/schemas/bodyPaymentInfo"
       responses:
         200:
           description: usuario
@@ -253,6 +266,34 @@ paths:
             application/json:
               schema: 
                 type: string
+
+  /users/delete/{userId}:
+    put:  
+      tags:
+          - Administrators 
+      description: elimina usuario (Admin)
+      security:
+        - delilaAuth: []
+      parameters:
+          - in: path
+            name: userId
+            schema:
+              type: integer
+            required: true
+      responses:
+        200:
+          description: mensaje de usuario eliminado con exito
+          content:
+            application/json:
+              schema:
+                type: string
+        400:
+          description: error eliminando usuario
+          content:
+            application/json:
+              schema: 
+                type: string
+
   /orders: 
     get:
       tags:
@@ -268,7 +309,8 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/fullOrder"
+                    allOf:
+                      - $ref: "#/components/schemas/fullOrder"
         400:
           description: error obteniendo listado de ordenes
           content:
@@ -279,7 +321,7 @@ paths:
     post:
       tags:
           - Users 
-      description: post para generar nuevo pedido 
+      description: post para generar nuevo pedido. Si el paymentType es "cash", no es necesario ingresar paymentId ni secCode. 
       security:
         - delilaAuth: []
       requestBody:
@@ -288,7 +330,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/bodyOrder"
+                allOf:
+                  - $ref: "#/components/schemas/bodyOrder"
       responses:
         200:
           description: se devuelve orden ingresada con exito
@@ -296,7 +339,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/order"
+                allOf:
+                  - $ref: "#/components/schemas/order"
         400:
           description: error insertando orden
           content:
@@ -308,7 +352,7 @@ paths:
     get:
       tags:
           - Administrators
-      description: ver el estado de un pedido en particular (ejecuta Admin),
+      description: ver el estado de un pedido en particular (ejecuta Admin)
       security:
         - delilaAuth: []
       parameters:
@@ -324,7 +368,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/order"
+                allOf:
+                  - $ref: "#/components/schemas/fullOrder"
         400:
           description: error revisando orden
           content:
@@ -336,7 +381,7 @@ paths:
     get:
       tags:
           - Users
-      description: ver el estado de las ordenes activas del propio usuario,
+      description: ver el estado de las ordenes activas del propio usuario
       security:
         - delilaAuth: []
       responses:
@@ -346,7 +391,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/order"
+                allOf:
+                  - $ref: "#/components/schemas/order"
         400:
           description: error revisando orden
           content:
@@ -385,7 +431,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/order"
+                allOf:
+                  - $ref: "#/components/schemas/order"
         400:
           description: error actualizando orden
           content:
@@ -407,7 +454,8 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/product"
+                    allOf:
+                      - $ref: "#/components/schemas/product"
         400:
           description: error listando productos
           content:
@@ -427,7 +475,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/bodyProduct"
+                allOf:
+                  - $ref: "#/components/schemas/bodyProduct"
       responses:
         200:
           description: nuevo producto agregado
@@ -435,7 +484,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/product"
+                allOf:
+                  - $ref: "#/components/schemas/product"
         400:
           description: error insertando producto
           content:
@@ -462,7 +512,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/product"
+                allOf:
+                  - $ref: "#/components/schemas/product"
         400:
           description: error revisando producto
           content:
@@ -488,7 +539,8 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/product"
+                allOf:
+                  - $ref: "#/components/schemas/bodyProduct"
       responses:
         200:
           description: producto actualizado
@@ -496,9 +548,37 @@ paths:
             application/json:
               schema:
                 type: object
-                $ref: "#/components/schemas/product"
+                allOf:
+                  - $ref: "#/components/schemas/product"
         400:
           description: error actualizando producto
+          content:
+            application/json:
+              schema: 
+                type: string
+
+  /products/delete/{productId}:
+    put:  
+      tags:
+          - Administrators 
+      description: elimina producto (Admin)
+      security:
+        - delilaAuth: []
+      parameters:
+          - in: path
+            name: productId
+            schema:
+              type: integer
+            required: true
+      responses:
+        200:
+          description: mensaje de producto eliminado con exito
+          content:
+            application/json:
+              schema:
+                type: string
+        400:
+          description: error eliminando producto
           content:
             application/json:
               schema: 
@@ -520,7 +600,7 @@ components:
         email:
           type: string
           description: email de usuario
-        password:
+        pass:
           type: string
           description: passcowrd de acceso de usuario
         address:
@@ -556,7 +636,7 @@ components:
         email:
           type: string
           description: email de usuario
-        password:
+        pass:
           type: string
           description: passcowrd de acceso de usuario
         address:
@@ -577,7 +657,7 @@ components:
         email:
           type: string
           description: email de usuario
-        password:
+        pass:
           type: string
           description: passcowrd de acceso de usuario
         address:
@@ -651,7 +731,8 @@ components:
           type: number
           description: sumatoria de los precios de los productos
         paymentType:
-          type: number
+          type: string
+          enum: [cash, debit, credit]
           description: forma de pago de orden
         address:
           type: string
@@ -688,7 +769,8 @@ components:
           type: number
           description: sumatoria de los precios de los productos
         paymentType:
-          type: number
+          type: string
+          enum: [cash, debit, credit]
           description: forma de pago de orden
         address:
           type: string
@@ -720,6 +802,10 @@ components:
                     description: cantidad de productos
                     type: integer
             description: listado de objetos de la orden
+        paymentType:
+          type: string
+          enum: [cash, debit, credit]
+          description: forma de pago de orden, si se elige "cash" no es necesario paymentId ni secCode
         paymentId:
           type: number
           description: id de forma de pago
@@ -734,7 +820,7 @@ components:
       properties:
         cardType:
           type: string
-          enum: [credito, debito]
+          enum: [credit, debit]
           description: debito/credito
         cardNumber:
           type: number

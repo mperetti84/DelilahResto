@@ -2,11 +2,10 @@
 const queries = require("../db/queries");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
-const { response } = require("express");
 
 // JWT config constants
 const privateKey = "mperetti-DelilahResto";
-const expTime = {expiresIn: '10m'};
+const expTime = {expiresIn: '5h'};
 
 // manage sign in information, add new user to users table, send product list, send user's session token
 const signHandler = async (userName, fullName, email, pass, address, phone) => {
@@ -37,12 +36,14 @@ const loginHandler = async (userId) => {
     const favorites = await queries.selectFavorites(userId);
     // get user admin status
     const isAdmin = await queries.selectQuery("users", ["admin"],["user_id"],[userId]);
+    // get user's available payment data
+    const paymentId = await queries.selectQuery("payment_data",["payment_data_id"],["user_id"],[userId]);
     // generate object with logged user info and create token
     const tokenInfo = {user_id: userId, admin: Boolean(isAdmin[0].admin)};
     console.log(tokenInfo);
     const token = jwt.sign(tokenInfo, privateKey, expTime);
     // build login data object
-    let loginData = {products: products, favorites: favorites, token: token};
+    let loginData = {products: products, favorites: favorites, paymentId: paymentId, token: token};
 
     console.log("Login data:");
     console.log(loginData);
@@ -145,9 +146,9 @@ const updateUserHandler = async (userId, userName, fullName, email, pass, addres
 } 
 
 // manage get all orders information
-const ordersHandler = async (userId) => {
+const ordersHandler = async (orderId) => {
     console.log("Entro en orders handler");
-    const ordersList = await queries.selectOrders(userId);
+    const ordersList = await queries.selectOrders(orderId);
     if(ordersList.length > 0){
         console.log("Order list:");
         let ordersArray = arrangeOrderObject(ordersList, true);
@@ -174,14 +175,17 @@ const activeOrdersHandler = async (userId) => {
 // manage information to update a user's order
 const updateOrderHandler = async (orderId, state) => {
     console.log("Entro en update order handler");
-    const orderExists = await queries.selectQuery("orders", ["state"],["order_id"],[orderId]);
+    const orderExists = await queries.selectQuery("orders", ["state","user_id"],["order_id"],[orderId]);
     if(orderId && state){
-        if(orderExists){
+        if(orderExists.length > 0){
             const response = await queries.updateQuery("orders",["state"],[state],["order_id"],[orderId]);
-            const updatedOrder = await queries.selectQuery("orders", ["*"],["order_id"],[orderId]);
+            // const updatedOrder = await queries.selectQuery("orders", ["*"],["order_id"],[orderId]);
+            // const userId = orderExists[0].user_id;
+            const updatedOrder = await queries.selectOrders(orderId);
+            let updatedOrderObj = arrangeOrderObject(updatedOrder, false);
             console.log("Updated order:");
-            console.log(updatedOrder);
-            return updatedOrder;
+            console.log(updatedOrderObj);
+            return updatedOrderObj;
         } else{
             throw new Error("Order not found");
         }
@@ -191,38 +195,61 @@ const updateOrderHandler = async (orderId, state) => {
 }
 
 // manage place new order logic.
-const addOrderHandler = async (userId, detail, paymentId, secCode, address) => {
+const addOrderHandler = async (userId, detail, paymentType, paymentId, secCode, address) => {
     // comparar secCode con codigo de tabla de payment methods, si es ok seguir
     console.log("Entro en add order handler");
-    // get security code of card
-    const payTableData = await queries.selectQuery("payment_data",["sec_code","user_id"],["payment_data_id"],[paymentId]);
-    console.log(detail);
-    if(payTableData[0].user_id == userId){
-        if(payTableData[0].sec_code == secCode){
-            // obtener costos de productos de detail y calcular costo total de orden
-            let totalCost = 0;
-            let productCost;
-            console.log(detail.length);
-            for (const element of detail){
-                productCost = await queries.selectQuery("products",["price"],["product_id"],[element.productId]);
-                totalCost = totalCost + (productCost[0].price * element.quantity);
-                console.log("Precio producto: " + productCost[0].price + ", cantidad: " + element.quantity + ", precio total acumulado: " + totalCost);
-            }
-            // insertar orden en table orders, agregar estado nuevo, costo total y fecha de creacion
-            const actualTime = moment().format("YYYY-MM-DD HH:mm:ss");
-            const orderId = await queries.insertQuery("orders",["user_id","state","address","total_cost","created","payment_data_id"],[userId,"nuevo",address,totalCost,actualTime,paymentId]);
-            // insertar order id, product id y cantidad en tabla order_products_map
-            for (const element of detail){
-                let response = await queries.insertQuery("order_products_map",["order_id","product_id","quantity"],[orderId,element.productId,element.quantity]);
-            }
-            const placedOrder = await queries.selectOrders(userId,orderId);
-            let placedOrderObj = arrangeOrderObject(placedOrder, false);
-            return placedOrderObj;
-        } else{
-            throw new Error("Wrong security code");
-        }
+    // initiate valid flag as false
+    let valid = false;
+    // if payment method is cash then validate order
+    if(paymentType === "cash"){
+        valid = true;
     } else{
-        throw new Error("Wrong paymanet data");
+        if((paymentType === "credit" || paymentType === "debit") && secCode != "" && paymentId != ""){
+            // if payment type is not cash then get security code of card
+            const payTableData = await queries.selectQuery("payment_data",["sec_code","user_id"],["payment_data_id"],[paymentId]);
+            if(payTableData.length > 0){
+                if(payTableData[0].user_id == userId){
+                    if(payTableData[0].sec_code == secCode){
+                        valid = true;
+                    } else{
+                        throw new Error("Wrong security code");
+                    }
+                } else{
+                    throw new Error("Wrong paymanet data");
+                }
+            } else{
+                throw new Error("Wrong paymanet data id");
+            }
+        } else{
+            throw new Error(`Fields paymentType, paymentId and secCode are mandatory if payment type is not cash`);
+        }
+    }
+    if(valid){
+        // obtener costos de productos de detail y calcular costo total de orden
+        let totalCost = 0;
+        let productCost;
+        let favExists;
+        console.log(detail.length);
+        // go through products in detail, calculate total cost of the order and add products as user's favorites
+        for (const element of detail){
+            productCost = await queries.selectQuery("products",["price"],["product_id"],[element.productId]);
+            totalCost = totalCost + (productCost[0].price * element.quantity);
+            console.log("Precio producto: " + productCost[0].price + ", cantidad: " + element.quantity + ", precio total acumulado: " + totalCost);
+            favExists = await queries.selectQuery("favorites_map",["favorite_id"],["user_id","product_id"],[userId,element.productId]);
+            if(favExists.length === 0){
+                let addFavorite = await queries.insertQuery("favorites_map",["user_id","product_id"],[userId,element.productId]);
+            }
+        }
+        // insertar orden en table orders, agregar estado nuevo, costo total y fecha de creacion
+        const actualTime = moment().format("YYYY-MM-DD HH:mm:ss");
+        const orderId = await queries.insertQuery("orders",["user_id","state","address","total_cost","created","payment_type"],[userId,"nuevo",address,totalCost,actualTime,paymentType]);
+        // insertar order id, product id y cantidad en tabla order_products_map
+        for (const element of detail){
+            let response = await queries.insertQuery("order_products_map",["order_id","product_id","quantity"],[orderId,element.productId,element.quantity]);
+        }
+        const placedOrder = await queries.selectOrders(orderId);
+        let placedOrderObj = arrangeOrderObject(placedOrder, false);
+        return placedOrderObj;
     }
 }
 
@@ -264,20 +291,24 @@ const addProductHandler = async (title, detail, price, photo) => {
     console.log("Entro en get products handler");
     if(title && detail && price && photo){
         const actualTime = moment().format("YYYY-MM-DD HH:mm:ss");
-        const response = queries.insertQuery("products",["title", "detail", "price", "photo", "created","active"],[title, detail, price, photo, actualTime, true]);
-        return `New product added succesfully`;
+        const productId = await queries.insertQuery("products",["title", "detail", "price", "photo", "created","active"],[title, detail, price, photo, actualTime, true]);
+        let newProduct = await queries.selectQuery("products",["product_id","title", "detail", "price", "photo"],["product_id"],[productId]);
+        return newProduct[0];
     } else{
         throw new Error("Madatory information missing")
     }
 }
 
-// 
+// manage update product information
 const updateProductHandler = async (title, detail, price, photo, productId) => {
     console.log("Entro en update product handler");
     if(title && detail && price && photo){
         const actualTime = moment().format("YYYY-MM-DD HH:mm:ss");
-        const response = queries.updateQuery("products",["title", "detail", "price", "photo", "modified"],[title, detail, price, photo, actualTime],["product_id"],[productId]);
-        return `Product data updated succesfully`;
+        const response = await queries.updateQuery("products",["title", "detail", "price", "photo", "modified"],[title, detail, price, photo, actualTime],["product_id"],[productId]);
+        let newProduct = await queries.selectQuery("products",["product_id","title", "detail", "price", "photo"],["product_id"],[productId]);
+        console.log("Rta update product");
+        console.log(newProduct[0]);
+        return newProduct[0];
     } else{
         throw new Error("Madatory information missing")
     }
@@ -298,38 +329,84 @@ const deleteProductHandler = async (productId) => {
 }
 
 // Function that arranges orders information from query response into an array of objects with the correct Order format
-// if isAsdmin is true returns all the info in the query response, if false returns only the basic info for users
+// if isAsdmin is true return all the info in the query response, if it is false return only the basic info for users
 const arrangeOrderObject = (ordersQueryArr, isAdmin) => {
     let ordersArray = [];
-    let orderListObj = {detail:[]}; 
-    let currentID = ordersQueryArr[0].order_id;
+    let orderListObj = {}; 
+    let currentId = ordersQueryArr[0].order_id; 
+    let prevOrderListObj = {}; 
+    let detailArray = []; 
+    let detailObj = {}; 
 
     ordersQueryArr.forEach((element, idx, arr) =>{
-        // everytime a new order_id is detected insert a copy of arranged order object into orders array
-        if(element.order_id != currentID || idx === arr.length){
-            ordersArray.push(Object.assign({},orderListObj));
-            // define new order id as current and clear array "detail"
-            currentID = element.order_id;
-            orderListObj.detail.length = 0;
-        }
+        console.log("Corrida foreach: " + idx + " de: " + arr.length);
+        // on each run build each order object
         orderListObj.orderId = element.order_id;
         orderListObj.state = element.state;
         orderListObj.totalCost = element.total_cost;
-        orderListObj.detail.push({
+        orderListObj.paymentType = element.payment_type;
+        orderListObj.address = element.address;
+        // build an object with the detail of each product
+        detailObj = {
             title: element.title,
             photo: element.photo,
             price: element.price,
             quantity: element.quantity
-            });
-        orderListObj.paymentType = element.card_type;
-        orderListObj.address = element.address;
-        // add user info to object if response is targeted to an Admin
+        };
+        // add user info to order object if response is targeted to an Admin
         if(isAdmin){
             orderListObj.fullName = element.full_name;
             orderListObj.userName = element.user_name;
             orderListObj.email = element.email;
             orderListObj.phone = element.phone;
         }
+        if(element.order_id === currentId){
+            console.log("Guarda detail en array con mismo id: " + currentId);
+            // insert product of order with the same order id into detail array (array with data of products in the order)
+            detailArray.push(detailObj);
+            // assign copy of array to object to avoid passing array by reference
+            orderListObj.detail = [...detailArray];
+            if(idx === arr.length - 1){
+                // if this is the last run, insert object into orders array
+                console.log("Guarda orden en array por ser ultimo elemento: " + idx);
+                console.log(orderListObj);
+                ordersArray.push(Object.assign({},orderListObj));
+            } else{
+                // copy object to an auxiliary object that will be used in the next run if necessary
+                console.log("Asigna nuevo obj a anterior: ");
+                prevOrderListObj = Object.assign({},orderListObj);
+            }
+        } else{
+            console.log("Guarda orden en array por tener diferente id: Anterior: " + currentId + " nuevo: " + element.order_id);
+            console.log(prevOrderListObj);
+            // if new element order_id does not match with previous order_id, insert previous object into orders array
+            ordersArray.push(Object.assign({},prevOrderListObj));
+            // reset detail array to start pushing next order's details
+            detailArray.length = 0;
+
+            console.log("Guarda detail en array con diferente id");
+            detailArray.push(detailObj);
+            orderListObj.detail = [...detailArray];
+            // if this is the last run, insert object into orders array
+            if(idx === arr.length - 1){
+                console.log("Guarda orden en array por ser ultimo elemento: " + idx);
+                console.log(orderListObj);
+                ordersArray.push(Object.assign({},orderListObj));
+            }
+
+            console.log("Asigna nuevo obj a anterior: ");
+            // copy object to an auxiliary object that will be used in the next run if necessary
+            prevOrderListObj = Object.assign({},orderListObj);
+            // define new element's order_id as current id to allow comparition in next run
+            currentId = element.order_id;
+        }
+        console.log("Arr index: " + idx + " de: " + arr.length + " current id: " + currentId);
+        console.log("Nuevo objeto orden: ");
+        console.log(orderListObj);
+        console.log("Viejo objeto orden: ");
+        console.log(prevOrderListObj);
+        // everytime a new order_id is detected insert a copy of arranged order object into orders array
+
     });
     console.log(ordersArray);
     return ordersArray;

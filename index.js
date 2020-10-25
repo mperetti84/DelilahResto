@@ -18,13 +18,13 @@ db.init()
 .then(async () => {
     console.log('DB connected');
     
-    // Only if DB was started correctly, start server 
+    // Start server only if DB was started correctly 
     app.listen(3000,() => {
-        console.log("Servidor iniciado");
+        console.log("Server started");
     });
 
 }).catch((err) => {
-	console.log('Error al conectar a la db', err);
+	console.log('Error trying to connect with DB', err);
 });
 
 

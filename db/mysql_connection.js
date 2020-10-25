@@ -14,7 +14,7 @@ const sequelize = new Sequelize({
 });
 
 const init = async () => {
-    console.log("Conectando con DB ...");
+    console.log("Connecting to DB ...");
     return sequelize.authenticate();
 };
 

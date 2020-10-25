@@ -4,10 +4,10 @@ const queries = require("../db/queries");
 // When user tries to log in, check if combination user/pass/active is valid
 const verifyLogin = async (req,res,next) => {
     try{
-        const {user, pass} = req.body;
-        console.log("Datos en middleware verifyLogin: " + user + ", " + pass);
-        if(user && pass){
-            const userData = await queries.selectQuery("users", ["user_id"], ["user_name","pass","active"], [user, pass, true]);
+        const {userName, pass} = req.body;
+        console.log("Datos en middleware verifyLogin: " + userName + ", " + pass);
+        if(userName && pass){
+            const userData = await queries.selectQuery("users", ["user_id"], ["user_name","pass","active"], [userName, pass, true]);
             console.log("Rta verify login middleware: " + userData[0]);
             if (userData[0]){
                 let userId = userData[0].user_id;

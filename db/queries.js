@@ -1,19 +1,19 @@
-const { response } = require("express");
 const mysql = require("../db/mysql_connection")
 
 // single insert query
 const insertQuery = async (table, fields, values) => {
     let fieldsString = "";
     let valuesString = "";
+    // if fields length and values length match then build string for query
     if (fields.length === values.length){
         fields.forEach(element => {
             fieldsString = fieldsString + `${element},`;
         });
         values.forEach(element => {
-            if(typeof(element) === 'boolean'){
+            // if value is boolean do not add ""
+            if(typeof(element) === 'boolean' || !isNaN(element)){
                 valuesString = valuesString + `${element},`;
-            }
-            else {
+            } else {
                 valuesString = valuesString + `"${element}",`;
             }
         });
@@ -31,7 +31,7 @@ const insertQuery = async (table, fields, values) => {
 //update fields of table with values where conditions equal conditionvalues
 const updateQuery = async (table, fields, values, condition, conditionValue) => {
     let setString = "";
-    // const whereString = "";
+    // if fields length and values length match then build string for query
     if (fields.length === values.length && condition.length === conditionValue.length){
         for (let i = 0; i < fields.length; i++) {
             setString = setString + `${fields[i]} = "${values[i]}", `;
@@ -46,21 +46,6 @@ const updateQuery = async (table, fields, values, condition, conditionValue) => 
     return query;
 }
 
-//delete
-const deleteQuery = async (table, fields, values) => {
-    let fieldsString = "";
-    fields.forEach(element => {
-        fieldsString = fieldsString + element;
-    });
-    let valuesString = "";
-    values.forEach(element => {
-        valuesString = valuesString + element;
-    });
-    const query = await mysql.query(`INSERT INTO ${table} (${fieldsString}) VALUES (${valuesString})`);
-    console.log("delete query: " + query);
-    return query;
-}
-
 //select
 const selectQuery = async (table, fields, columns, values) => {
     let fieldsString = "";
@@ -69,10 +54,12 @@ const selectQuery = async (table, fields, columns, values) => {
     });
     fieldsString = fieldsString.slice(0,-1);
     let whereString = "";
+    // if column is greater than 0 and matches with values length then build query string
     if (columns.length === values.length && columns.length > 0){
         whereString = "WHERE ";
         for (let i = 0; i < columns.length; i++) {
-            if (typeof(values[i]) === 'boolean'){
+            // if value is boolean or a number do not add "" 
+            if (typeof(values[i]) === 'boolean' || !isNaN(values[i])){
                 whereString = whereString + `${columns[i]} = ${values[i]} AND `;
             } else {
                 whereString = whereString + `${columns[i]} = "${values[i]}" AND `;
@@ -109,15 +96,14 @@ const selectFavorites = async (userId) => {
     return response;
 }
 
-//select user's active orders from junction table "order_products_map"
+//select user's active orders from junction table "order_products_map" and order them from lower to higher order_id
 const selectActiveOrders = async (userId) => {
     let queryString = 
         `SELECT o.order_id, p.photo, p.title, p.price, op.quantity, o.total_cost, o.state, 
-        pd.card_type, o.address, u.full_name, u.user_name, u.email, u.phone
+        o.payment_type, o.address, u.full_name, u.user_name, u.email, u.phone
         FROM orders o
         INNER JOIN order_products_map op ON op.order_id = o.order_id
         INNER JOIN products p ON p.product_id = op.product_id
-        INNER JOIN payment_data pd ON pd.payment_data_id = o.payment_data_id
         INNER JOIN users u ON u.user_id = o.user_id  
         WHERE o.user_id = ${userId} and o.state <> "cancelado" and o.state <> "entregado" 
         ORDER BY o.order_id ASC`;
@@ -132,23 +118,18 @@ const selectActiveOrders = async (userId) => {
 }
 
 // select orders from junction table "order_products_map", 
-// if userId is null return all orders, else return only that user's orders
 // if orderId is null return all orders, else return only that specific order
-const selectOrders = async (userId,orderId) => {
-    console.log("Entro en query select orders, user id: " + userId);
+const selectOrders = async (orderId) => {
+    console.log("Entro en query select orders, order id: " + orderId);
     let queryString = 
         `SELECT o.order_id, p.photo, p.title, p.price, op.quantity, o.total_cost, o.state, 
-        pd.card_type, o.address, u.full_name, u.user_name, u.email, u.phone
+        o.payment_type, o.address, u.full_name, u.user_name, u.email, u.phone
         FROM orders o
         INNER JOIN order_products_map op ON op.order_id = o.order_id
         INNER JOIN products p ON p.product_id = op.product_id
-        INNER JOIN payment_data pd ON pd.payment_data_id = o.payment_data_id
         INNER JOIN users u ON u.user_id = o.user_id`;
-    if(userId){
-        queryString = queryString + ` WHERE o.user_id = ${userId}`;
-    }
-    // get specific order works only if userId is defined
-    if(orderId && userId){
+
+    if(orderId){
         queryString = queryString + ` AND o.order_id = ${orderId}`;
     }
     queryString = queryString + ` ORDER BY o.order_id ASC`;
@@ -177,11 +158,9 @@ const userExistQuery = async (userName, email) => {
     }
 }
 
-
 module.exports = {
     insertQuery, 
     updateQuery, 
-    deleteQuery, 
     selectQuery, 
     selectFavorites, 
     selectActiveOrders, 

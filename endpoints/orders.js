@@ -20,11 +20,11 @@ router.get("/", middlewares.verifyAdmin, async (req,res) => {
     }
 });
 
-// get certain user's order by user id
-router.get("/check/:id", middlewares.verifyAdmin , async (req,res) => {
+// get certain user's order by order id
+router.get("/check/:orderId", middlewares.verifyAdmin , async (req,res) => {
     try{
-        let userId = req.params.id;
-        let response = await handlers.ordersHandler(userId);
+        let orderId = req.params.orderId;
+        let response = await handlers.ordersHandler(orderId);
         if(response){
             console.log("Entro en ruta orders, lista orders: ");
             console.log(response);
@@ -77,11 +77,11 @@ router.put("/:orderId", middlewares.verifyAdmin, async (req,res) => {
 router.post("/", middlewares.verifyLogged ,async (req,res) => {
     try{
         // detail: array of [{productId,quantity}]; secCode: 3 digits of security code
-        let {detail, paymentId, secCode, address} = req.body;
+        let {detail, paymentType, paymentId, secCode, address} = req.body;
         console.log("Entro en ruta crear orden: ");
         console.log(detail[0]);
          // response: detail, costo total, estado
-        let response = await handlers.addOrderHandler(req.user_id, detail, paymentId, secCode, address);
+        let response = await handlers.addOrderHandler(req.user_id, detail, paymentType, paymentId, secCode, address);
         if(response){
             res.status(200).json(response);
         } else{
