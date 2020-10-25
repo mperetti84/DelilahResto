@@ -46,7 +46,7 @@ $ git clone https://github.com/mperetti84/DelilahResto.git
 Ahora ya tenés el proyecto en tu máquina. Si abrís la carpeta que creaste anteriormente deberías ver todas las carpetas y archivos del proyecto. 
 
 ## Instalar las dependencias del proyecto
-Para que la API funcione correctamente, es necesario que instales todas las dependencias del proyecto. Estos módulos de NodeJS que se instalarán son obligatorioas ya que sin ellos no se podrían ejecutar la mayoria de las funcionalidades de la API. Seguí estos pasos:
+Para que la API funcione correctamente, es necesario que instales todas las dependencias del proyecto. Estos módulos de NodeJS que se instalarán son obligatorios ya que sin ellos no se podrían ejecutar la mayoria de las funcionalidades de la API. Seguí estos pasos:
 - Desde el entorno de desarrollo/ editor de código abri la carpeta donde copiaste el proyecto.
 - Desplegá un visor de Terminal (en SVC: View->Terminal)
 - Ejecuta el siguiente comando para instalar las dependencias:
