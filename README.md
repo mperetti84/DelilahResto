@@ -59,13 +59,13 @@ Listo, las dependencias fueron instaladas y asociadas al proyecto. Deberías ver
 Para funcionar, la API debe estar vinculada a una base de datos con un nombre determinado y con una estructura de tablas específica. A continuación están los pasos que debés seguir para crear la base de datos, sus tablas correspondientes y popular dos de sus tablas con datos de ejemplo para que puedas correr y probar la API: 
 - Desde el panel de control de XAMPP, iniciar Apache y MySQL.
 - Ingresar a la ventana de Administrador de MySQL "phpmyadmin" (http://localhost/phpmyadmin/index.php)
-- En la pestaña Importar, hacé click en "Seleccionar archivo" y seleccioná el archivo "db_init_sql" que se encuentra en la carpeta "/Docs".
+- En la pestaña Importar, hacé click en "Seleccionar archivo" y seleccioná el archivo "db_init.sql" que se encuentra en la carpeta "/Docs".
 - Clickeá en el botón "Continuar"
 
 En este punto ya creaste la base de datos, todas sus tablas y populaste las tablas users y products con datos que te van a servir para probar la API. A continuación vamos a conectar la API a la base de datos e inicializar el servidor.
 
 ## Inicializar la API
-Ya está todo listo para poder inicializar la API. En el archivo "config.js" dentro de la carpeta "/db" se encuentran los parametros necesarios para la conexión a la base de datos con sus valores por defecto. Con lo pasos que siguen vas a poder conectar la API con la DB e inicializar el servidor dejándola lista para ejecutar las peticiones definidas en el archivo de especificaciones "spec.yml":
+Ya está todo listo para poder inicializar la API. En el archivo "config.js" dentro de la carpeta "/db" se encuentran los parametros necesarios para la conexión a la base de datos con sus valores por defecto. Con los pasos que siguen vas a poder conectar la API con la DB e inicializar el servidor dejándola lista para ejecutar las peticiones definidas en el archivo de especificaciones "spec.yml":
 - En el panel de control de XAMPP entra a la seccion de configuración haciendo click en el botón "Config"
 - Entrá en "Service and Port Settings"
 - En la pestaña MySQL, asegurate que el Main Port tenga el valor 3306 (valor de configuración por defecto). Se querés usar otro puerto, recordá de modificar también el parámetro "port" en el archivo "config.js".
