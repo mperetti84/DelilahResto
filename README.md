@@ -22,7 +22,7 @@ En esta carpeta estan los códigos de las tres categorias de endpoints de la API
 ### DB
 En este directorio estan los códigos donde se definen la configuración de la base de datos, los métodos que definien la estructura de las queries y un módulo queries.js que contiene todos los métodos que necesita la API para interactuar con la base de datos.
 ### Docs
-Esta carpeta contiene el archivo db_init.sql con las queries necesarias para crear la base de datos, sus tablas y popular con datos de prueba las tablas de usuarios y productos. Aquí tambien se encuentra el documento de diseño "design_document.pdf" que muestra un diagrama de arquitectura de la API y el diagrama de entidad/relación de la Base de Datos.
+Esta carpeta contiene el archivo db_init.sql con las queries necesarias para crear la base de datos, sus tablas y popular con datos de prueba las tablas de usuarios y productos. En esta carpeta también vas a encontrar el archivo de especificación donde se detallan las estructuras de todos los endpoints para hacer un uso correcto de la API. Aquí tambien se encuentra el documento de diseño "design_document.pdf" que muestra un diagrama de arquitectura de la API y el diagrama de entidad/relación de la Base de Datos.
 
 ## Requerimientos para correr la API y DB
 Antes que nada, asegurate de cumplir con los siguientes requerimientos previos. Van a ser necesarios para poder descargar, correr y probar la API correctamente. Debés tener instalado lo siguiente:
