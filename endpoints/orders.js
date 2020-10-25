@@ -9,8 +9,6 @@ router.get("/", middlewares.verifyAdmin, async (req,res) => {
     try{
         let response = await handlers.ordersHandler();
         if(response){
-            console.log("Entro en ruta orders, lista orders: ");
-            console.log(response);
             res.status(200).json(response);
         } else{
             throw new Error(response);
@@ -26,8 +24,6 @@ router.get("/check/:orderId", middlewares.verifyAdmin , async (req,res) => {
         let orderId = req.params.orderId;
         let response = await handlers.ordersHandler(orderId);
         if(response){
-            console.log("Entro en ruta orders, lista orders: ");
-            console.log(response);
             res.status(200).json(response);
         } else{
             throw new Error(response);
@@ -43,8 +39,6 @@ router.get("/check", middlewares.verifyLogged , async (req,res) => {
         let userId = req.user_id;
         let response = await handlers.activeOrdersHandler(userId);
         if(response){
-            console.log("Entro en ruta orders, lista orders: ");
-            console.log(response);
             res.status(200).json(response);
         } else{
             throw new Error(response);
@@ -57,13 +51,10 @@ router.get("/check", middlewares.verifyLogged , async (req,res) => {
 // modify certain user's order by order id
 router.put("/:orderId", middlewares.verifyAdmin, async (req,res) => {
     try{
-        console.log("Entro en ruta update order (admin): ");
         let orderId = req.params.orderId;
-        console.log("Order id a cambiar: " + orderId);
         let {state} = req.body;
         let response = await handlers.updateOrderHandler(orderId, state); 
         if(response){
-            console.log(response);
             res.status(200).json(response);
         } else{
             throw new Error(response);
@@ -78,8 +69,6 @@ router.post("/", middlewares.verifyLogged ,async (req,res) => {
     try{
         // detail: array of [{productId,quantity}]; secCode: 3 digits of security code
         let {detail, paymentType, paymentId, secCode, address} = req.body;
-        console.log("Entro en ruta crear orden: ");
-        console.log(detail[0]);
          // response: detail, costo total, estado
         let response = await handlers.addOrderHandler(req.user_id, detail, paymentType, paymentId, secCode, address);
         if(response){

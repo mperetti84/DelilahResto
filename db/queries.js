@@ -23,9 +23,10 @@ const insertQuery = async (table, fields, values) => {
     } else {
         return "";
     }
-    const query = await mysql.query(`INSERT INTO ${table} (${fieldsString}) VALUES (${valuesString})`)
-    console.log("insert query: " + query);
-    return query;
+
+    let queryString = `INSERT INTO ${table} (${fieldsString}) VALUES (${valuesString})`;
+    const response = await mysql.query(queryString);
+    return response;
 }
 
 //update fields of table with values where conditions equal conditionvalues
@@ -46,9 +47,10 @@ const updateQuery = async (table, fields, values, condition, conditionValue) => 
     } else {
         throw new Error("Fields or condition number do not match");
     }
-    const query = await mysql.query(`UPDATE ${table} SET ${setString} WHERE ${condition} = ${conditionValue}`);
-    console.log("update query: " + query);
-    return query;
+
+    let queryString = `UPDATE ${table} SET ${setString} WHERE ${condition} = ${conditionValue}`;
+    const response = await mysql.query(queryString);
+    return response;
 }
 
 //select
@@ -73,13 +75,9 @@ const selectQuery = async (table, fields, columns, values) => {
         // remove " AND " at the end of string
         whereString = whereString.slice(0,-5);
     } 
+
     let queryString = `SELECT ${fieldsString} FROM ${table} ${whereString}`;
-    console.log("Select query string: " + queryString);
-
     const response = await mysql.query(queryString);
-    console.log("Rta en .then de query: ");
-    console.log(response);
-
     return response;
 }
 
@@ -92,12 +90,8 @@ const selectFavorites = async (userId) => {
         INNER JOIN products ON products.product_id = favorites_map.product_id
         INNER JOIN users ON users.user_id = favorites_map.user_id
         WHERE users.user_id = ${userId}`;
-    console.log("Select favorites query string: " + queryString);
 
     const response = await mysql.query(queryString);
-    console.log("Rta en .then de query select favorites: ");
-    console.log(response);
-
     return response;
 }
 
@@ -113,19 +107,13 @@ const selectActiveOrders = async (userId) => {
         WHERE o.user_id = ${userId} and o.state <> "cancelado" and o.state <> "entregado" 
         ORDER BY o.order_id ASC`;
 
-    console.log("Select active orders query string: " + queryString);
-
     const response = await mysql.query(queryString);
-    console.log("Rta en .then de query select active orders: ");
-    console.log(response);
-
     return response;
 }
 
 // select orders from junction table "order_products_map", 
 // if orderId is null return all orders, else return only that specific order
 const selectOrders = async (orderId) => {
-    console.log("Entro en query select orders, order id: " + orderId);
     let queryString = 
         `SELECT o.order_id, p.photo, p.title, p.price, op.quantity, o.total_cost, o.state, 
         o.payment_type, o.address, u.full_name, u.user_name, u.email, u.phone
@@ -137,25 +125,17 @@ const selectOrders = async (orderId) => {
     if(orderId){
         queryString = queryString + ` AND o.order_id = ${orderId}`;
     }
+
     queryString = queryString + ` ORDER BY o.order_id ASC`;
-
-    console.log("Select active orders query string: " + queryString);
-
     const response = await mysql.query(queryString);
-    console.log("Rta en .then de query select active orders: ");
-    console.log(response);
-
     return response;
 }
 
 //If user exists returns true, if it does not returns false
 const userExistQuery = async (userName, email) => {
     let queryString = `SELECT user_id FROM users WHERE user_name = "${userName}" OR email = "${email}"`;
-    console.log("User exists query string: " + queryString);
 
     const response = await mysql.query(queryString);
-    console.log("Rta de user exists query: ");
-    console.log(response);
     if (response.length === 0){
         return false;
     } else{

@@ -9,8 +9,6 @@ router.get("/", async (req,res) => {
     try{
         let response = await handlers.productsHandler();
         if(response){
-            console.log("Entro en ruta products, lista products: ");
-            console.log(response);
             res.status(200).json(response);
         } else{
             throw new Error(response);
@@ -26,8 +24,6 @@ router.get("/:id", async (req,res) => {
         let productId = req.params.id;
         let response = await handlers.productsHandler(productId);
         if(response){
-            console.log("Entro en ruta product: ");
-            console.log(response);
             res.status(200).json(response);
         } else{
             throw new Error(response);
@@ -46,8 +42,6 @@ router.post("/", async (req,res) => {
         let {title, detail, price, photo} = req.body;
         let response = await handlers.addProductHandler(title, detail, price, photo);
         if(response){
-            console.log("Entro en ruta add product: ");
-            console.log(response);
             res.status(200).json(response);
         } else{
             throw new Error(response);
@@ -64,8 +58,6 @@ router.put("/:id", async (req,res) => {
         let productId = req.params.id;
         let response = await handlers.updateProductHandler(title, detail, price, photo, productId);
         if(response){
-            console.log("Entro en ruta update product: ");
-            console.log(response);
             res.status(200).json(response);
         } else{
             throw new Error(response);
@@ -79,7 +71,6 @@ router.put("/:id", async (req,res) => {
 router.put("/delete/:id", async (req,res) => {
     try{
         let productId = req.params.id;
-        console.log("Entro en ruta delete product");
         let response = await handlers.deleteProductHandler(productId);
         if(response){
             res.status(200).json(response);
