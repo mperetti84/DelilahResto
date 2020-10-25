@@ -34,7 +34,12 @@ const updateQuery = async (table, fields, values, condition, conditionValue) => 
     // if fields length and values length match then build string for query
     if (fields.length === values.length && condition.length === conditionValue.length){
         for (let i = 0; i < fields.length; i++) {
-            setString = setString + `${fields[i]} = "${values[i]}", `;
+            // if value is boolean do not add ""
+            if(typeof(values[i]) === 'boolean' || !isNaN(values[i])){
+                setString = setString + `${fields[i]} = ${values[i]}, `;
+            } else{
+                setString = setString + `${fields[i]} = "${values[i]}", `;
+            }
         }
         // remove ", " at the end of string
         setString   = setString.slice(0,-2);

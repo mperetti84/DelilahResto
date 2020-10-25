@@ -39,7 +39,7 @@ CREATE TABLE orders
 (
     order_id int AUTO_INCREMENT NOT NULL,
     user_id int NOT NULL,
-    payment_data_id int NOT NULL,
+    payment_data_id int,
     state enum('nuevo', 'confirmado', 'preparando', 'enviando', 'cancelado', 'entregado') NOT NULL,
     address varchar(50) NOT NULL,
     created datetime NOT NULL,

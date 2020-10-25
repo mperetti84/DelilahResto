@@ -64,7 +64,7 @@ const verifyAdmin = async (req, res, next) => {
     } catch(err) {
         console.log("Error verify admin middleware: " + err);
         // identify if enters catch due to expired token
-        if(err.message.search("expired")){
+        if(err.message.search("expired") === true){
             res.status(400).json("Session expired, please log in again.");
         } else{
             res.status(400).json("User does not have admin access: " + err.message);
