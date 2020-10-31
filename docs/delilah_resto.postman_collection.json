@@ -41,7 +41,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"userName\": \"\",\r\n    \"pass\": \"\"\r\n}",
+					"raw": "{\r\n    \"userName\": \"Kyla\",\r\n    \"pass\": \"9074\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -312,7 +312,7 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:3000/orders/check/34",
+					"raw": "http://localhost:3000/orders/check/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -321,7 +321,7 @@
 					"path": [
 						"orders",
 						"check",
-						"34"
+						"1"
 					]
 				}
 			},
@@ -401,7 +401,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"detail\": [\r\n        {\"productId\": \"5\",\r\n        \"quantity\": \"1\"},\r\n        {\"productId\": \"9\",\r\n        \"quantity\": \"2\"}\r\n    ], \r\n    \"paymentType\": \"cash\",\r\n    \"paymentId\": \"\", \r\n    \"secCode\": \"\", \r\n    \"address\": \"Casa\"\r\n}",
+					"raw": "{\r\n    \"detail\": [\r\n        {\"productId\": \"2\",\r\n        \"quantity\": \"3\"}\r\n    ], \r\n    \"paymentType\": \"cash\",\r\n    \"paymentId\": \"\", \r\n    \"secCode\": \"\", \r\n    \"address\": \"Casa\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -475,7 +475,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"title\": \"\",\r\n    \"detail\": \"\",\r\n    \"price\": ,\r\n    \"photo\": \"\"\r\n}",
+					"raw": "{\r\n    \"title\": \"\",\r\n    \"detail\": \"\",\r\n    \"price\": 10,\r\n    \"photo\": \"\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -553,6 +553,33 @@
 						"products",
 						"delete",
 						"11"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Eliminar una orden",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{auth}}"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/orders/delete/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"orders",
+						"delete",
+						"1"
 					]
 				}
 			},

@@ -104,7 +104,7 @@ const selectActiveOrders = async (userId) => {
         INNER JOIN order_products_map op ON op.order_id = o.order_id
         INNER JOIN products p ON p.product_id = op.product_id
         INNER JOIN users u ON u.user_id = o.user_id  
-        WHERE o.user_id = ${userId} and o.state <> "cancelado" and o.state <> "entregado" 
+        WHERE o.user_id = ${userId} and o.state <> "cancelado" and o.state <> "entregado" and o.active = true
         ORDER BY o.order_id ASC`;
 
     const response = await mysql.query(queryString);
@@ -120,7 +120,8 @@ const selectOrders = async (orderId) => {
         FROM orders o
         INNER JOIN order_products_map op ON op.order_id = o.order_id
         INNER JOIN products p ON p.product_id = op.product_id
-        INNER JOIN users u ON u.user_id = o.user_id`;
+        INNER JOIN users u ON u.user_id = o.user_id
+        WHERE o.active = true`;
 
     if(orderId){
         queryString = queryString + ` AND o.order_id = ${orderId}`;

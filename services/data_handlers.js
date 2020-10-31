@@ -143,7 +143,7 @@ const activeOrdersHandler = async (userId) => {
 
 // manage information to update a user's order
 const updateOrderHandler = async (orderId, state) => {
-    const orderExists = await queries.selectQuery("orders", ["state","user_id"],["order_id"],[orderId]);
+    const orderExists = await queries.selectQuery("orders", ["state","user_id"],["order_id","active"],[orderId,true]);
     if(orderId && state){
         if(orderExists.length > 0){
             const response = await queries.updateQuery("orders",["state"],[state],["order_id"],[orderId]);
@@ -157,6 +157,25 @@ const updateOrderHandler = async (orderId, state) => {
         }
     } else{
         throw new Error("Order ID and order state are mandatory");
+    }
+}
+
+// manage information to delete a user's order
+const deleteOrderHandler = async (orderId) => {
+    const orderExists = await queries.selectQuery("orders", ["state","user_id"],["order_id","active"],[orderId,true]);
+    if(orderId){
+        if(orderExists.length > 0){
+            const response = await queries.updateQuery("orders",["active"],[false],["order_id"],[orderId]);
+            if(response){
+                return `Order with order_id: ${orderId} deleted succesfully`;
+            } else{
+                throw new Error("Delete order error");
+            }
+        } else{
+            throw new Error("Order not found");
+        }
+    } else{
+        throw new Error("Order ID is mandatory");
     }
 }
 
@@ -203,9 +222,9 @@ const addOrderHandler = async (userId, detail, paymentType, paymentId, secCode, 
                 let addFavorite = await queries.insertQuery("favorites_map",["user_id","product_id"],[userId,element.productId]);
             }
         }
-        // insertar orden en table orders, agregar estado nuevo, costo total y fecha de creacion
+        // insertar orden en table orders, agregar estado nuevo, costo total, fecha de creacion y definir como active
         const actualTime = moment().format("YYYY-MM-DD HH:mm:ss");
-        const orderId = await queries.insertQuery("orders",["user_id","state","address","total_cost","created","payment_type"],[userId,"nuevo",address,totalCost,actualTime,paymentType]);
+        const orderId = await queries.insertQuery("orders",["user_id","state","address","total_cost","created","payment_type","active"],[userId,"nuevo",address,totalCost,actualTime,paymentType,true]);
         // insertar order id, product id y cantidad en tabla order_products_map
         for (const element of detail){
             let response = await queries.insertQuery("order_products_map",["order_id","product_id","quantity"],[orderId,element.productId,element.quantity]);
@@ -358,6 +377,7 @@ module.exports = {
     ordersHandler, 
     activeOrdersHandler, 
     updateOrderHandler, 
+    deleteOrderHandler,
     addOrderHandler, 
     addPaymentInfo, 
     productsHandler,

@@ -64,6 +64,21 @@ router.put("/:orderId", middlewares.verifyAdmin, async (req,res) => {
     }
 });
 
+// delete certain user's order by order id
+router.put("/delete/:orderId", middlewares.verifyAdmin, async (req,res) => {
+    try{
+        let orderId = req.params.orderId;
+        let response = await handlers.deleteOrderHandler(orderId); 
+        if(response){
+            res.status(200).json(response);
+        } else{
+            throw new Error(response);
+        }
+    } catch(err){
+        res.status(400).json("Delete order error: " + err.message);
+    }
+});
+
 // place new order
 router.post("/", middlewares.verifyLogged ,async (req,res) => {
     try{

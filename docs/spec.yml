@@ -439,6 +439,33 @@ paths:
             application/json:
               schema: 
                 type: string
+  
+  /orders/delete/{orderId}:
+    put:
+      tags:
+          - Administrators
+      description: eliminar un pedido en particular
+      security:
+        - delilaAuth: []
+      parameters:
+        - in: path
+          name: orderId
+          schema:
+            type: integer
+          required: true
+      responses:
+        200:
+          description: mensaje de pedido eliminado con exito
+          content:
+            application/json:
+              schema:
+                type: string
+        400:
+          description: error actualizando orden
+          content:
+            application/json:
+              schema: 
+                type: string
 
   /products: 
     get:
